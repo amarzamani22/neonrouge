@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Neon Rogue: Cyber Survivor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --neon-cyan: #00f3ff;
+  --neon-magenta: #ff0055;
+  --neon-lime: #00ff66;
+  --neon-yellow: #ffe600;
+  --neon-purple: #9d00ff;
+  --bg-dark: #070913;
+  --panel-bg: rgba(12, 16, 32, 0.85);
+  --panel-border: rgba(0, 243, 255, 0.35);
+  --panel-glow: rgba(0, 243, 255, 0.15);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-dark);
+  font-family: 'Rajdhani', sans-serif;
+  color: #fff;
+}
+
+#game-canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background: radial-gradient(circle at center, #0f1429 0%, #060811 100%);
+}
+
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hud-top {
+  pointer-events: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(7, 9, 19, 0.9) 0%, rgba(7, 9, 19, 0) 100%);
+}
+
+.hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.stat-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.level-badge {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(0, 243, 255, 0.15);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.wave-timer {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+}
+
+.score-display {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--neon-yellow);
+  text-shadow: 0 0 8px rgba(255, 230, 0, 0.6);
+}
+
+.combo-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--neon-magenta);
+  color: #fff;
+  transform: scale(0.9);
+  transition: transform 0.15s ease;
+}
+
+.bar-container {
+  position: relative;
+  width: 100%;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.hp-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff0055, #ff5500);
+  border-radius: 4px;
+  box-shadow: 0 0 10px #ff0055;
+  transition: width 0.15s ease-out;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00f3ff, #00ff66);
+  border-radius: 4px;
+  box-shadow: 0 0 10px #00f3ff;
+  transition: width 0.1s ease-out;
+}
+
+.boss-bar-wrap {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.boss-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--neon-magenta);
+  letter-spacing: 2px;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; text-shadow: 0 0 12px var(--neon-magenta); }
+}
+
+.hud-btn {
+  background: rgba(12, 16, 32, 0.7);
+  border: 1px solid var(--neon-cyan);
+  color: #fff;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.hud-btn:active {
+  transform: scale(0.92);
+  background: rgba(0, 243, 255, 0.3);
+}
+
+/* Virtual Joystick Indicator */
+#joystick-base {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 243, 255, 0.08) 0%, rgba(0, 243, 255, 0.25) 100%);
+  border: 2px dashed rgba(0, 243, 255, 0.6);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: none;
+  z-index: 5;
+}
+
+#joystick-knob {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #00f3ff, #0066aa);
+  border: 2px solid #fff;
+  box-shadow: 0 0 15px #00f3ff;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 15, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 20;
+  pointer-events: auto;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cyber-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 25px var(--panel-glow), inset 0 0 20px rgba(0, 243, 255, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  position: relative;
+}
+
+.cyber-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 15px var(--neon-cyan);
+  margin-bottom: 6px;
+}
+
+.cyber-subtitle {
+  font-size: 15px;
+  color: #a4b3d6;
+  margin-bottom: 20px;
+}
+
+/* Upgrade Card Selection Grid */
+.upgrade-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.upgrade-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(18, 24, 48, 0.7);
+  border: 1px solid rgba(0, 243, 255, 0.25);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.upgrade-card:hover, .upgrade-card:active {
+  background: rgba(0, 243, 255, 0.18);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.upgrade-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(0, 243, 255, 0.15);
+  border: 1px solid var(--neon-cyan);
+  flex-shrink: 0;
+}
+
+.upgrade-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.upgrade-desc {
+  font-size: 12px;
+  color: #9cb2db;
+  line-height: 1.3;
+}
+
+.cyber-btn {
+  font-family: 'Orbitron', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 14px 28px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #00f3ff 0%, #0066ff 100%);
+  color: #040817;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(0, 243, 255, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.cyber-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 0 25px var(--neon-cyan);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.stat-box {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-box-label {
+  font-size: 11px;
+  color: #8b9bb8;
+  text-transform: uppercase;
+}
+
+.stat-box-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+@media (min-width: 640px) {
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .upgrade-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px 12px;
+  }
+}
+</style>
+</head>
+<body>
+
+<canvas id="game-canvas"></canvas>
+
+<!-- Dynamic Floating Touch Joystick -->
+<div id="joystick-base">
+  <div id="joystick-knob"></div>
+</div>
+
+<div id="ui-layer">
+  <!-- Top HUD -->
+  <div class="hud-top">
+    <div class="hud-row">
+      <div class="stat-group">
+        <div class="level-badge" id="hud-level">LVL 1</div>
+        <div class="score-display"><span id="hud-score">000000</span> <span class="combo-tag" id="hud-combo">1.0x</span></div>
+      </div>
+      <div class="wave-timer" id="hud-time">00:00</div>
+      <div class="stat-group">
+        <button class="hud-btn" id="sound-btn" title="Toggle Sound">🔊</button>
+        <button class="hud-btn" id="pause-btn" title="Pause Game">⏸</button>
+      </div>
+    </div>
+
+    <!-- Health Bar -->
+    <div class="bar-container" title="Player Shield Integrity">
+      <div class="hp-bar-fill" id="hud-hp-bar"></div>
+    </div>
+
+    <!-- XP Bar -->
+    <div class="bar-container" style="height: 6px;" title="Experience Progress">
+      <div class="xp-bar-fill" id="hud-xp-bar"></div>
+    </div>
+
+    <!-- Boss Health Bar -->
+    <div class="boss-bar-wrap" id="boss-hud-wrap">
+      <div class="boss-label">⚠️ OVERMIND TITAN APPROACHING ⚠️</div>
+      <div class="bar-container" style="height: 10px; border-color: var(--neon-magenta);">
+        <div class="hp-bar-fill" id="boss-hp-bar" style="background: linear-gradient(90deg, #ff0055, #9d00ff); box-shadow: 0 0 12px #ff0055;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Start Screen Modal -->
+<div class="modal-backdrop active" id="modal-start">
+  <div class="cyber-card">
+    <div class="cyber-title">NEON ROGUE</div>
+    <div class="cyber-subtitle">CYBER SURVIVOR • ARCADE OVERDRIVE</div>
+    
+    <div class="stats-grid" style="margin-bottom: 20px;">
+      <div class="stat-box">
+        <div class="stat-box-label">High Score</div>
+        <div class="stat-box-val" id="start-high-score">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Best Survival</div>
+        <div class="stat-box-val" id="start-best-time">00:00</div>
+      </div>
+    </div>
+
+    <button class="cyber-btn" id="btn-start-game">INITIALIZE PROTOCOL</button>
+    <button class="cyber-btn" id="btn-how-to-play" style="background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: none; margin-top: 8px;">HOW TO PLAY</button>
+  </div>
+</div>
+
+<!-- Instructions Modal -->
+<div class="modal-backdrop" id="modal-instructions">
+  <div class="cyber-card">
+    <div class="cyber-title" style="font-size: 22px;">TACTICAL BRIEFING</div>
+    <div class="cyber-subtitle" style="margin-bottom: 12px;">SURVIVE ESCALATING CYBERNETIC WAVES</div>
+    
+    <div style="font-size: 13px; text-align: left; line-height: 1.6; color: #b7c7ea; margin-bottom: 16px;">
+      <p>🕹️ <strong>Movement:</strong> Touch & drag anywhere on mobile screen. On desktop, use <strong style="color:var(--neon-cyan)">WASD</strong> or <strong style="color:var(--neon-cyan)">Arrow keys</strong>.</p>
+      <p style="margin-top: 8px;">🎯 <strong>Auto-Combat:</strong> Cyber blasters auto-acquire nearest hostile targets automatically. Dodge and weave!</p>
+      <p style="margin-top: 8px;">💎 <strong>Roguelite Progression:</strong> Collect dropped glowing <span style="color:var(--neon-cyan)">Data Shards</span> to gain XP. Choose synergistic upgrades on each level-up.</p>
+      <p style="margin-top: 8px;">⚡ <strong>Aggressive Combos:</strong> Defeating swarms quickly stacks your combo multiplier for massive score bonuses!</p>
+    </div>
+
+    <button class="cyber-btn" id="btn-close-instructions">UNDERSTOOD</button>
+  </div>
+</div>
+
+<!-- Level-Up Modal -->
+<div class="modal-backdrop" id="modal-levelup">
+  <div class="cyber-card" style="max-width: 600px;">
+    <div class="cyber-title" style="color: var(--neon-lime); text-shadow: 0 0 12px var(--neon-lime); font-size: 24px;">LEVEL UPGRADE READY</div>
+    <div class="cyber-subtitle">CHOOSE ONE SYSTEM AUGMENTATION</div>
+    
+    <div class="upgrade-grid" id="upgrade-options-container">
+      <!-- Injected via JavaScript -->
+    </div>
+  </div>
+</div>
+
+<!-- Game Over Modal -->
+<div class="modal-backdrop" id="modal-gameover">
+  <div class="cyber-card">
+    <div class="cyber-title" style="color: var(--neon-magenta); text-shadow: 0 0 15px var(--neon-magenta);">MISSION FAILED</div>
+    <div class="cyber-subtitle">SIGNAL LOST • VESSEL COMPROMISED</div>
+    
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-box-label">Survive Time</div>
+        <div class="stat-box-val" id="end-time">00:00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Total Eliminations</div>
+        <div class="stat-box-val" id="end-kills">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Final Score</div>
+        <div class="stat-box-val" id="end-score" style="color: var(--neon-yellow);">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label">Level Reached</div>
+        <div class="stat-box-val" id="end-level">1</div>
+      </div>
+    </div>
+
+    <button class="cyber-btn" id="btn-restart">RESTART OPERATION</button>
+  </div>
+</div>
+
+<!-- Pause Modal -->
+<div class="modal-backdrop" id="modal-pause">
+  <div class="cyber-card">
+    <div class="cyber-title" style="font-size: 22px;">SYSTEM SUSPENDED</div>
+    <div class="cyber-subtitle">OPERATION ON HOLD</div>
+    <button class="cyber-btn" id="btn-resume">RESUME MISSION</button>
+    <button class="cyber-btn" id="btn-quit" style="background: rgba(255, 0, 85, 0.2); color: #ff0055; border: 1px solid #ff0055; margin-top: 10px; box-shadow: none;">ABORT RUN</button>
+  </div>
+</div>
+
+<script>
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.enabled = true;
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        this.ctx = new AudioContext();
+      }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playLaser() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      const now = this.ctx.currentTime;
+      osc.frequency.setValueAtTime(750, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.09);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    } catch(e) {}
+  }
+
+  playGem() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      const now = this.ctx.currentTime;
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.07);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    } catch(e) {}
+  }
+
+  playExplode(isBoss = false) {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const duration = isBoss ? 0.6 : 0.22;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = isBoss ? 'sawtooth' : 'triangle';
+      const now = this.ctx.currentTime;
+      osc.frequency.setValueAtTime(isBoss ? 160 : 220, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + duration);
+      gain.gain.setValueAtTime(isBoss ? 0.35 : 0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + duration);
+    } catch(e) {}
+  }
+
+  playHit() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      const now = this.ctx.currentTime;
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } catch(e) {}
+  }
+
+  playLevelUp() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        const now = this.ctx.currentTime + idx * 0.08;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.16, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      });
+    } catch(e) {}
+  }
+
+  playBossAlarm() {
+    if (!this.enabled || !this.ctx) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      const now = this.ctx.currentTime;
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.linearRampToValueAtTime(600, now + 0.2);
+      osc.frequency.linearRampToValueAtTime(300, now + 0.4);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    } catch(e) {}
+  }
+}
+
+const UPGRADES_DB = [
+  {
+    id: 'multi_shot',
+    name: 'PLASMA SPREAD',
+    icon: '⚡',
+    desc: 'Adds +1 high-velocity projectile to your primary attack volley.',
+    apply(p) { p.bulletsPerVolley += 1; }
+  },
+  {
+    id: 'fire_rate',
+    name: 'HYPER OVERCLOCK',
+    icon: '🔥',
+    desc: 'Increases weapon firing rate by +22%.',
+    apply(p) { p.fireInterval = Math.max(0.11, p.fireInterval * 0.78); }
+  },
+  {
+    id: 'plasma_damage',
+    name: 'NANITE MUNITIONS',
+    icon: '💥',
+    desc: 'Increases bullet impact damage by +30%.',
+    apply(p) { p.bulletDamage = Math.round(p.bulletDamage * 1.3); }
+  },
+  {
+    id: 'shield_orb',
+    name: 'ORBITAL AE
