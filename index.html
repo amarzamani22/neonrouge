@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Neon Rogue: Cyber Survivor</title>
+    
+    <!-- Retro Pixel Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <style>
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
@@ -32,42 +36,122 @@
             box-shadow: 0 0 10px #0f0; transition: width 0.2s;
         }
         
-        /* Overlays (Start Menu & Upgrades) */
-        .modal-overlay {
+        /* NEW RETRO START SCREEN MODAL */
+        #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 16, 0.90);
+            /* Warm sunset gradient from reference image */
+            background: linear-gradient(to bottom, #d97b48 0%, #b3592b 45%, #52271c 100%);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100; pointer-events: auto; text-align: center;
+            font-family: 'Press Start 2P', cursive;
         }
-        #upgrade-modal { display: none; } /* Hidden by default */
-        
-        h1.title {
-            color: #0ff; text-shadow: 0 0 20px #0ff; font-size: 40px; margin: 0 0 10px 0;
+
+        .title-container {
+            margin-bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        h2.subtitle {
-            color: #f0f; text-shadow: 0 0 10px #f0f; margin-top: 0; margin-bottom: 30px; letter-spacing: 2px;
+
+        .pixel-subtitle {
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 0px #15607a;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
         }
-        
-        .upgrade-btn, .start-btn {
-            background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #0ff;
+
+        .pixel-title {
+            color: #ffaa00; /* Warm orange */
+            font-size: 40px;
+            /* Thick teal/blue blocky outline effect */
+            text-shadow: 
+                4px 4px 0 #15607a,
+                -4px -4px 0 #15607a,
+                4px -4px 0 #15607a,
+                -4px 4px 0 #15607a,
+                0px 8px 0px #0a2d3a;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        /* Blocky Button Layout */
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .retro-btn {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #98653b;
+            color: #ffcc55;
+            border: 4px solid #2e1a0f;
+            padding: 12px 16px;
+            font-size: 10px;
+            cursor: pointer;
+            /* 3D Inner Bevel */
+            box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3), inset 4px 4px 0px rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            transition: transform 0.1s;
+        }
+
+        .retro-btn:active {
+            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.3);
+            transform: translateY(4px);
+        }
+
+        .play-btn {
+            background-color: #8c5324;
+            font-size: 16px;
+            padding: 16px 30px;
+            color: #ffcc55;
+        }
+
+        /* Level Up Modal (Kept Neon for Gameplay) */
+        #upgrade-modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 16, 0.90); flex-direction: column; justify-content: center; 
+            align-items: center; z-index: 100; pointer-events: auto; text-align: center;
+        }
+        .upgrade-btn {
+            background: rgba(0,0,0,0.5); color: #fff; border: 1px solid #f0f;
             padding: 15px 30px; margin: 10px 0; font-size: 18px; font-weight: bold;
             font-family: 'Courier New', Courier, monospace; cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); transition: all 0.2s;
-            text-transform: uppercase;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); width: 80%; max-width: 300px;
         }
-        .upgrade-btn { border-color: #f0f; box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); width: 80%; max-width: 300px; }
-        
-        .start-btn:hover, .start-btn:active { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; }
         .upgrade-btn:hover, .upgrade-btn:active { background: #f0f; color: #000; box-shadow: 0 0 20px #f0f; }
     </style>
 </head>
 <body>
 
-    <!-- Start Screen -->
-    <div id="start-screen" class="modal-overlay">
-        <h1 class="title">NEON ROGUE</h1>
-        <h2 class="subtitle">CYBER SURVIVOR</h2>
-        <button id="start-btn" class="start-btn">INITIALIZE SYSTEM</button>
+    <!-- RETRO START SCREEN -->
+    <div id="start-screen">
+        <div class="title-container">
+            <div class="pixel-subtitle">NEON ROGUE</div>
+            <div class="pixel-title">SURVIVOR</div>
+        </div>
+
+        <div class="menu-buttons">
+            <div class="btn-row">
+                <button id="start-btn" class="retro-btn play-btn">PLAY NOW</button>
+            </div>
+            <div class="btn-row">
+                <button class="retro-btn">OPTIONS</button>
+                <button class="retro-btn">SHOP</button>
+            </div>
+            <div class="btn-row">
+                <button class="retro-btn">MORE GAMES</button>
+                <button class="retro-btn">LEADERBOARDS</button>
+            </div>
+        </div>
     </div>
 
     <!-- HUD -->
@@ -81,8 +165,8 @@
     </div>
 
     <!-- Upgrade Screen -->
-    <div id="upgrade-modal" class="modal-overlay">
-        <h1 class="title" style="color:#ff0; text-shadow: 0 0 20px #ff0; font-size: 30px;">SYSTEM UPGRADE</h1>
+    <div id="upgrade-modal">
+        <h1 style="color:#ff0; text-shadow: 0 0 20px #ff0; font-size: 30px;">SYSTEM UPGRADE</h1>
         <div id="upgrade-options" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
     </div>
 
@@ -99,14 +183,11 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Game States
         let isGameStarted = false;
         let isGameOver = false;
         let isPaused = false;
-        let score = 0;
-        let wave = 1;
+        let score = 0; let wave = 1;
 
-        // Player & Upgrades
         const player = {
             x: canvas.width / 2, y: canvas.height / 2,
             radius: 15, color: '#0ff', speed: 4, vx: 0, vy: 0,
@@ -114,39 +195,30 @@
             level: 1, xp: 0, maxXp: 10, magnetRadius: 80
         };
 
-        const projectiles = [];
-        const enemies = [];
-        const particles = [];
-        const gems = []; 
-
+        const projectiles = []; const enemies = []; const particles = []; const gems = []; 
         const joystick = { active: false, originX: 0, originY: 0, currentX: 0, currentY: 0, maxDistance: 50 };
 
-        // --- START MENU LOGIC ---
+        // Start Game Listener
         document.getElementById('start-btn').addEventListener('click', () => {
             document.getElementById('start-screen').style.display = 'none';
             isGameStarted = true;
         });
 
-        // --- UPGRADE SYSTEM ---
         const upgradePool = [
-            { id: 'rapid', name: 'Overclock', desc: '+ Fire Rate', action: () => player.shootInterval = Math.max(5, player.shootInterval - 4) },
-            { id: 'multi', name: 'Spread Core', desc: '+1 Projectile', action: () => player.multiShot += 1 },
-            { id: 'pierce', name: 'Plasma Piercer', desc: 'Shots pass through targets', action: () => player.pierce += 1 },
-            { id: 'speed', name: 'Ion Thrusters', desc: '+ Movement Speed', action: () => player.speed += 1.5 },
-            { id: 'magnet', name: 'Gravity Mod', desc: 'Increased XP Pickup Range', action: () => player.magnetRadius += 50 }
+            { name: 'Overclock', desc: '+ Fire Rate', action: () => player.shootInterval = Math.max(5, player.shootInterval - 4) },
+            { name: 'Spread Core', desc: '+1 Projectile', action: () => player.multiShot += 1 },
+            { name: 'Plasma Piercer', desc: 'Shots pierce targets', action: () => player.pierce += 1 },
+            { name: 'Ion Thrusters', desc: '+ Movement Speed', action: () => player.speed += 1.5 },
+            { name: 'Gravity Mod', desc: 'Increased XP Range', action: () => player.magnetRadius += 50 }
         ];
 
         function triggerLevelUp() {
-            isPaused = true;
-            player.level++;
-            player.xp -= player.maxXp;
-            player.maxXp = Math.floor(player.maxXp * 1.5);
-            
+            isPaused = true; player.level++;
+            player.xp -= player.maxXp; player.maxXp = Math.floor(player.maxXp * 1.5);
             document.getElementById('levelDisplay').innerText = player.level;
             updateXpBar();
 
-            const shuffled = [...upgradePool].sort(() => 0.5 - Math.random());
-            const choices = shuffled.slice(0, 3);
+            const choices = [...upgradePool].sort(() => 0.5 - Math.random()).slice(0, 3);
             const optionsContainer = document.getElementById('upgrade-options');
             optionsContainer.innerHTML = '';
             
@@ -155,11 +227,9 @@
                 btn.className = 'upgrade-btn';
                 btn.innerHTML = `<strong>${choice.name}</strong><br><span style="font-size:12px">${choice.desc}</span>`;
                 btn.onclick = (e) => {
-                    e.preventDefault(); e.stopPropagation();
-                    choice.action();
+                    e.preventDefault(); choice.action();
                     document.getElementById('upgrade-modal').style.display = 'none';
-                    isPaused = false;
-                    joystick.active = false;
+                    isPaused = false; joystick.active = false;
                 };
                 optionsContainer.appendChild(btn);
             });
@@ -167,8 +237,7 @@
         }
 
         function updateXpBar() {
-            const pct = Math.min(100, (player.xp / player.maxXp) * 100);
-            document.getElementById('xp-bar').style.width = pct + '%';
+            document.getElementById('xp-bar').style.width = Math.min(100, (player.xp / player.maxXp) * 100) + '%';
         }
 
         // --- INPUT HANDLING ---
@@ -176,23 +245,17 @@
             e.preventDefault();
             if (!isGameStarted || isPaused) return;
             if (isGameOver) return resetGame();
-            const touch = e.touches[0];
-            joystick.active = true;
+            const touch = e.touches[0]; joystick.active = true;
             joystick.originX = touch.clientX; joystick.originY = touch.clientY;
             joystick.currentX = touch.clientX; joystick.currentY = touch.clientY;
         }, { passive: false });
-
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
             if (!joystick.active || isPaused || !isGameStarted) return;
-            const touch = e.touches[0];
-            joystick.currentX = touch.clientX; joystick.currentY = touch.clientY;
+            joystick.currentX = e.touches[0].clientX; joystick.currentY = e.touches[0].clientY;
         }, { passive: false });
-
         canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            joystick.active = false;
-            player.vx = 0; player.vy = 0;
+            e.preventDefault(); joystick.active = false; player.vx = 0; player.vy = 0;
         }, { passive: false });
 
         canvas.addEventListener('mousedown', (e) => {
@@ -209,10 +272,7 @@
         window.addEventListener('mouseup', () => { joystick.active = false; player.vx = 0; player.vy = 0; });
 
         const keys = {};
-        window.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            if (isGameOver && e.key === 'enter') resetGame();
-        });
+        window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; if (isGameOver && e.key === 'enter') resetGame(); });
         window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
         // --- GAME LOGIC ---
@@ -224,43 +284,21 @@
             else if (side === 2) { ex = Math.random() * canvas.width; ey = canvas.height + 30; }
             else { ex = -30; ey = Math.random() * canvas.height; }
 
-            enemies.push({
-                x: ex, y: ey, radius: 12 + Math.random() * 8, color: '#f0f',
-                speed: 1 + Math.random() * (0.5 + wave * 0.2), hp: 1 + Math.floor(wave / 2)
-            });
+            enemies.push({ x: ex, y: ey, radius: 12 + Math.random() * 8, color: '#f0f', speed: 1 + Math.random() * (0.5 + wave * 0.2), hp: 1 + Math.floor(wave / 2) });
         }
 
         function createExplosion(x, y, color) {
-            for (let i = 0; i < 15; i++) {
-                particles.push({
-                    x: x, y: y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
-                    life: 1, color: color
-                });
-            }
+            for (let i = 0; i < 15; i++) particles.push({ x: x, y: y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, life: 1, color: color });
             try { if ('vibrate' in navigator) navigator.vibrate(20); } catch (err) {}
-        }
-
-        function getNearestEnemy() {
-            let nearest = null; let minDist = Infinity;
-            enemies.forEach(enemy => {
-                const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
-                if (dist < minDist) { minDist = dist; nearest = enemy; }
-            });
-            return nearest;
         }
 
         function update() {
             if (!isGameStarted || isGameOver || isPaused) return;
 
             if (joystick.active) {
-                const dx = joystick.currentX - joystick.originX;
-                const dy = joystick.currentY - joystick.originY;
-                const distance = Math.hypot(dx, dy);
-                const normalizedDist = Math.min(distance, joystick.maxDistance) / joystick.maxDistance;
-                if (distance > 0) {
-                    player.vx = (dx / distance) * player.speed * normalizedDist;
-                    player.vy = (dy / distance) * player.speed * normalizedDist;
-                }
+                const dx = joystick.currentX - joystick.originX; const dy = joystick.currentY - joystick.originY;
+                const dist = Math.hypot(dx, dy); const norm = Math.min(dist, joystick.maxDistance) / joystick.maxDistance;
+                if (dist > 0) { player.vx = (dx / dist) * player.speed * norm; player.vy = (dy / dist) * player.speed * norm; }
             } else {
                 player.vx = 0; player.vy = 0;
                 if (keys['w'] || keys['arrowup']) player.vy = -player.speed;
@@ -269,38 +307,33 @@
                 if (keys['d'] || keys['arrowright']) player.vx = player.speed;
             }
 
-            player.x += player.vx; player.y += player.vy;
-            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + player.vx));
+            player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y + player.vy));
 
             player.autoShootTimer++;
             if (player.autoShootTimer >= player.shootInterval) {
-                const target = getNearestEnemy();
-                if (target) {
-                    const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
+                let nearest = null; let minDist = Infinity;
+                enemies.forEach(e => { const d = Math.hypot(e.x - player.x, e.y - player.y); if (d < minDist) { minDist = d; nearest = e; }});
+                
+                if (nearest) {
+                    const baseAngle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
                     const spreadAngle = 0.2; 
                     const startAngle = baseAngle - (spreadAngle * (player.multiShot - 1)) / 2;
 
                     for(let s = 0; s < player.multiShot; s++) {
-                        const currentAngle = startAngle + (spreadAngle * s);
-                        projectiles.push({
-                            x: player.x, y: player.y, vx: Math.cos(currentAngle) * 12, vy: Math.sin(currentAngle) * 12,
-                            radius: 4, color: '#ff0', pierceRemaining: player.pierce, hitEnemies: []
-                        });
+                        projectiles.push({ x: player.x, y: player.y, vx: Math.cos(startAngle + spreadAngle * s) * 12, vy: Math.sin(startAngle + spreadAngle * s) * 12, radius: 4, color: '#ff0', pierce: player.pierce, hit: [] });
                     }
                     player.autoShootTimer = 0;
                 }
             }
 
             for (let i = projectiles.length - 1; i >= 0; i--) {
-                const p = projectiles[i];
-                p.x += p.vx; p.y += p.vy;
+                const p = projectiles[i]; p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) projectiles.splice(i, 1);
             }
 
             for (let i = gems.length - 1; i >= 0; i--) {
-                const g = gems[i];
-                const dist = Math.hypot(player.x - g.x, player.y - g.y);
+                const g = gems[i]; const dist = Math.hypot(player.x - g.x, player.y - g.y);
                 if (dist < player.magnetRadius) {
                     const angle = Math.atan2(player.y - g.y, player.x - g.x);
                     g.x += Math.cos(angle) * 8; g.y += Math.sin(angle) * 8;
@@ -314,35 +347,27 @@
             if (Math.random() < 0.02 + (wave * 0.005)) spawnEnemy();
 
             for (let i = enemies.length - 1; i >= 0; i--) {
-                const e = enemies[i];
-                const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                const e = enemies[i]; const angle = Math.atan2(player.y - e.y, player.x - e.x);
                 e.x += Math.cos(angle) * e.speed; e.y += Math.sin(angle) * e.speed;
 
-                const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
-                if (distToPlayer - player.radius - e.radius < 1) {
-                    isGameOver = true;
-                    try { if ('vibrate' in navigator) navigator.vibrate(200); } catch (err) {}
+                if (Math.hypot(player.x - e.x, player.y - e.y) - player.radius - e.radius < 1) {
+                    isGameOver = true; try { if ('vibrate' in navigator) navigator.vibrate(200); } catch (err) {}
                 }
 
                 for (let j = projectiles.length - 1; j >= 0; j--) {
                     const p = projectiles[j];
-                    if(p.hitEnemies.includes(e)) continue; 
+                    if(p.hit.includes(e)) continue; 
 
-                    const distToProj = Math.hypot(p.x - e.x, p.y - e.y);
-                    if (distToProj - e.radius - p.radius < 1) {
-                        e.hp--; p.hitEnemies.push(e); p.pierceRemaining--;
+                    if (Math.hypot(p.x - e.x, p.y - e.y) - e.radius - p.radius < 1) {
+                        e.hp--; p.hit.push(e); p.pierce--;
                         createExplosion(p.x, p.y, '#fff');
 
-                        if (p.pierceRemaining <= 0) projectiles.splice(j, 1);
+                        if (p.pierce <= 0) projectiles.splice(j, 1);
 
                         if (e.hp <= 0) {
-                            createExplosion(e.x, e.y, e.color);
-                            gems.push({x: e.x, y: e.y, radius: 4, color: '#0f0'});
-                            enemies.splice(i, 1);
-                            score += 10; document.getElementById('scoreDisplay').innerText = score;
-                            if (score % 200 === 0) {
-                                wave++; document.getElementById('waveDisplay').innerText = wave;
-                            }
+                            createExplosion(e.x, e.y, e.color); gems.push({x: e.x, y: e.y, radius: 4, color: '#0f0'});
+                            enemies.splice(i, 1); score += 10; document.getElementById('scoreDisplay').innerText = score;
+                            if (score % 200 === 0) { wave++; document.getElementById('waveDisplay').innerText = wave; }
                         }
                         break;
                     }
@@ -350,89 +375,63 @@
             }
 
             for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                const p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05;
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
 
         // --- DRAW LOGIC ---
         function draw() {
-            ctx.fillStyle = 'rgba(5, 5, 16, 0.3)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
-            ctx.lineWidth = 1;
-            const gridSize = 50;
-            const offsetX = (player.x * 0.1) % gridSize;
-            const offsetY = (player.y * 0.1) % gridSize;
+            ctx.fillStyle = 'rgba(5, 5, 16, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; ctx.lineWidth = 1;
+            const gridSize = 50; const offsetX = (player.x * 0.1) % gridSize; const offsetY = (player.y * 0.1) % gridSize;
             for (let x = -offsetX; x < canvas.width; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
             for (let y = -offsetY; y < canvas.height; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
 
-            if (!isGameStarted) return; // Keep grid animating but don't draw entities behind start menu
+            if (!isGameStarted) return;
 
             ctx.shadowBlur = 10; ctx.shadowColor = '#0f0'; ctx.fillStyle = '#0f0';
             gems.forEach(g => { ctx.beginPath(); ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2); ctx.fill(); });
             ctx.shadowBlur = 0;
 
             if (!isGameOver) {
-                ctx.strokeStyle = 'rgba(0, 255, 0, 0.05)';
-                ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI * 2); ctx.stroke();
-
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.05)'; ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI * 2); ctx.stroke();
                 ctx.shadowBlur = 15; ctx.shadowColor = player.color; ctx.fillStyle = player.color;
-                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill();
-                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
             }
 
             ctx.shadowBlur = 10; ctx.shadowColor = '#ff0'; ctx.fillStyle = '#ff0';
             projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill(); });
 
             ctx.shadowColor = '#f0f'; ctx.fillStyle = '#f0f';
-            enemies.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill(); });
-            ctx.shadowBlur = 0;
+            enemies.forEach(e => { ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill(); }); ctx.shadowBlur = 0;
 
-            particles.forEach(p => {
-                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
-                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
-            });
+            particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); });
             ctx.globalAlpha = 1.0;
 
             if (joystick.active && !isPaused) {
                 ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.arc(joystick.originX, joystick.originY, joystick.maxDistance, 0, Math.PI * 2); ctx.stroke();
-                ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-                ctx.beginPath(); ctx.arc(joystick.currentX, joystick.currentY, 15, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.5)'; ctx.beginPath(); ctx.arc(joystick.currentX, joystick.currentY, 15, 0, Math.PI * 2); ctx.fill();
             }
 
             if (isGameOver) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#f00'; ctx.shadowBlur = 20; ctx.shadowColor = '#f00';
-                ctx.font = 'bold 40px Courier New'; ctx.textAlign = 'center';
-                ctx.fillText('SYSTEM FAILURE', canvas.width / 2, canvas.height / 2 - 20);
-                ctx.fillStyle = '#0ff'; ctx.shadowColor = '#0ff'; ctx.font = '20px Courier New';
-                ctx.fillText('Tap or press ENTER to reboot', canvas.width / 2, canvas.height / 2 + 30);
-                ctx.shadowBlur = 0;
+                ctx.font = 'bold 40px Courier New'; ctx.textAlign = 'center'; ctx.fillText('SYSTEM FAILURE', canvas.width / 2, canvas.height / 2 - 20);
+                ctx.fillStyle = '#0ff'; ctx.shadowColor = '#0ff'; ctx.font = '20px Courier New'; ctx.fillText('Tap or press ENTER to reboot', canvas.width / 2, canvas.height / 2 + 30); ctx.shadowBlur = 0;
             }
         }
 
         function resetGame() {
-            score = 0; wave = 1;
-            player.x = canvas.width / 2; player.y = canvas.height / 2;
-            player.level = 1; player.xp = 0; player.maxXp = 10;
-            player.shootInterval = 25; player.multiShot = 1; player.pierce = 1; player.speed = 4; player.magnetRadius = 80;
+            score = 0; wave = 1; player.x = canvas.width / 2; player.y = canvas.height / 2;
+            player.level = 1; player.xp = 0; player.maxXp = 10; player.shootInterval = 25; player.multiShot = 1; player.pierce = 1; player.speed = 4; player.magnetRadius = 80;
             enemies.length = 0; projectiles.length = 0; particles.length = 0; gems.length = 0;
-            document.getElementById('scoreDisplay').innerText = score;
-            document.getElementById('waveDisplay').innerText = wave;
-            document.getElementById('levelDisplay').innerText = player.level;
-            updateXpBar();
-            isGameOver = false;
+            document.getElementById('scoreDisplay').innerText = score; document.getElementById('waveDisplay').innerText = wave; document.getElementById('levelDisplay').innerText = player.level;
+            updateXpBar(); isGameOver = false;
         }
 
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
+        function loop() { update(); draw(); requestAnimationFrame(loop); }
         loop();
     </script>
 </body>
