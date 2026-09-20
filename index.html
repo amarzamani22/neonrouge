@@ -13,7 +13,7 @@
             background-color: #050510;
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
-            touch-action: none; /* Prevents scrolling on mobile */
+            touch-action: none;
         }
         canvas {
             display: block;
@@ -30,6 +30,8 @@
             justify-content: space-between;
             padding: 20px;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .hud-text {
             color: #0ff;
@@ -37,6 +39,62 @@
             font-size: 24px;
             font-weight: bold;
             margin: 0;
+        }
+        /* XP Bar */
+        #xp-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #222;
+            border: 1px solid #0f0;
+            margin-top: 10px;
+        }
+        #xp-bar {
+            width: 0%;
+            height: 100%;
+            background: #0f0;
+            box-shadow: 0 0 10px #0f0;
+            transition: width 0.2s;
+        }
+        /* Upgrade Modal */
+        #upgrade-modal {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 5, 16, 0.95);
+            border: 2px solid #0ff;
+            box-shadow: 0 0 20px #0ff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            pointer-events: auto; /* Allow clicks on buttons */
+            z-index: 100;
+            width: 80%;
+            max-width: 400px;
+        }
+        #upgrade-modal h2 {
+            color: #ff0;
+            text-shadow: 0 0 10px #ff0;
+            margin-top: 0;
+        }
+        .upgrade-btn {
+            background: transparent;
+            color: #fff;
+            border: 1px solid #f0f;
+            padding: 15px;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+            transition: all 0.2s;
+        }
+        .upgrade-btn:hover, .upgrade-btn:active {
+            background: #f0f;
+            color: #000;
+            box-shadow: 0 0 20px #f0f;
         }
     </style>
 </head>
@@ -46,7 +104,15 @@
         <div>
             <p class="hud-text">SCORE: <span id="scoreDisplay">0</span></p>
             <p class="hud-text" style="font-size: 16px; color: #f0f; text-shadow: 0 0 8px #f0f;">WAVE: <span id="waveDisplay">1</span></p>
+            <p class="hud-text" style="font-size: 16px; color: #0f0; text-shadow: 0 0 8px #0f0; margin-top:5px;">LVL: <span id="levelDisplay">1</span></p>
+            <div id="xp-bar-container"><div id="xp-bar"></div></div>
         </div>
+    </div>
+
+    <!-- Upgrade Screen -->
+    <div id="upgrade-modal">
+        <h2>SYSTEM UPGRADE</h2>
+        <div id="upgrade-options"></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -55,7 +121,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-        // Resize canvas to fill window
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -63,12 +128,12 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        // Game State
         let score = 0;
         let wave = 1;
         let isGameOver = false;
+        let isPaused = false;
 
-        // Player Object
+        // Player & Upgrades
         const player = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -78,71 +143,148 @@
             vx: 0,
             vy: 0,
             autoShootTimer: 0,
-            shootInterval: 15 // frames between shots
+            
+            // Stats
+            shootInterval: 25,
+            multiShot: 1,
+            pierce: 1,
+            
+            // RPG Elements
+            level: 1,
+            xp: 0,
+            maxXp: 10,
+            magnetRadius: 80
         };
 
-        // Arrays for game entities
         const projectiles = [];
         const enemies = [];
         const particles = [];
+        const gems = []; // XP Gems
 
-        // Virtual Joystick State
         const joystick = {
             active: false,
-            originX: 0,
-            originY: 0,
-            currentX: 0,
-            currentY: 0,
+            originX: 0, originY: 0,
+            currentX: 0, currentY: 0,
             maxDistance: 50
         };
 
+        // --- UPGRADE SYSTEM ---
+        const upgradePool = [
+            { id: 'rapid', name: 'Overclock', desc: '+ Fire Rate', action: () => player.shootInterval = Math.max(5, player.shootInterval - 4) },
+            { id: 'multi', name: 'Spread Core', desc: '+1 Projectile', action: () => player.multiShot += 1 },
+            { id: 'pierce', name: 'Plasma Piercer', desc: 'Shots pass through targets', action: () => player.pierce += 1 },
+            { id: 'speed', name: 'Ion Thrusters', desc: '+ Movement Speed', action: () => player.speed += 1.5 },
+            { id: 'magnet', name: 'Gravity Mod', desc: 'Increased XP Pickup Range', action: () => player.magnetRadius += 50 }
+        ];
+
+        function triggerLevelUp() {
+            isPaused = true;
+            player.level++;
+            player.xp -= player.maxXp;
+            player.maxXp = Math.floor(player.maxXp * 1.5); // Next level requires more XP
+            
+            document.getElementById('levelDisplay').innerText = player.level;
+            updateXpBar();
+
+            // Pick 3 random upgrades
+            const shuffled = [...upgradePool].sort(() => 0.5 - Math.random());
+            const choices = shuffled.slice(0, 3);
+
+            const optionsContainer = document.getElementById('upgrade-options');
+            optionsContainer.innerHTML = '';
+            
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'upgrade-btn';
+                btn.innerHTML = `<strong>${choice.name}</strong><br><span style="font-size:12px">${choice.desc}</span>`;
+                
+                btn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    choice.action();
+                    document.getElementById('upgrade-modal').style.display = 'none';
+                    isPaused = false;
+                    joystick.active = false; // Reset joystick so it doesn't get stuck
+                };
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('upgrade-modal').style.display = 'block';
+        }
+
+        function updateXpBar() {
+            const pct = Math.min(100, (player.xp / player.maxXp) * 100);
+            document.getElementById('xp-bar').style.width = pct + '%';
+        }
+
         // --- INPUT HANDLING ---
-        
-        // Touch (Mobile)
         canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             if (isGameOver) return resetGame();
+            if (isPaused) return;
             const touch = e.touches[0];
             joystick.active = true;
             joystick.originX = touch.clientX;
             joystick.originY = touch.clientY;
             joystick.currentX = touch.clientX;
             joystick.currentY = touch.clientY;
-        });
+        }, { passive: false });
 
         canvas.addEventListener('touchmove', (e) => {
-            if (!joystick.active) return;
+            e.preventDefault();
+            if (!joystick.active || isPaused) return;
             const touch = e.touches[0];
             joystick.currentX = touch.clientX;
             joystick.currentY = touch.clientY;
-        });
+        }, { passive: false });
 
-        canvas.addEventListener('touchend', () => {
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            joystick.active = false;
+            player.vx = 0;
+            player.vy = 0;
+        }, { passive: false });
+
+        // Mouse Controls
+        canvas.addEventListener('mousedown', (e) => {
+            if (isGameOver) return resetGame();
+            if (isPaused) return;
+            joystick.active = true;
+            joystick.originX = e.clientX;
+            joystick.originY = e.clientY;
+            joystick.currentX = e.clientX;
+            joystick.currentY = e.clientY;
+        });
+        canvas.addEventListener('mousemove', (e) => {
+            if (!joystick.active || isPaused) return;
+            joystick.currentX = e.clientX;
+            joystick.currentY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => {
             joystick.active = false;
             player.vx = 0;
             player.vy = 0;
         });
 
-        // Keyboard (Desktop)
+        // Keyboard Controls
         const keys = {};
         window.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
-            if (isGameOver && e.key === 'Enter') resetGame();
+            if (isGameOver && e.key === 'enter') resetGame();
         });
         window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
         // --- GAME LOGIC ---
-
         function spawnEnemy() {
             const side = Math.floor(Math.random() * 4);
             let ex, ey;
-            if (side === 0) { ex = Math.random() * canvas.width; ey = -30; } // Top
-            else if (side === 1) { ex = canvas.width + 30; ey = Math.random() * canvas.height; } // Right
-            else if (side === 2) { ex = Math.random() * canvas.width; ey = canvas.height + 30; } // Bottom
-            else { ex = -30; ey = Math.random() * canvas.height; } // Left
+            if (side === 0) { ex = Math.random() * canvas.width; ey = -30; }
+            else if (side === 1) { ex = canvas.width + 30; ey = Math.random() * canvas.height; }
+            else if (side === 2) { ex = Math.random() * canvas.width; ey = canvas.height + 30; }
+            else { ex = -30; ey = Math.random() * canvas.height; }
 
             enemies.push({
-                x: ex,
-                y: ey,
+                x: ex, y: ey,
                 radius: 12 + Math.random() * 8,
                 color: '#f0f',
                 speed: 1 + Math.random() * (0.5 + wave * 0.2),
@@ -153,16 +295,12 @@
         function createExplosion(x, y, color) {
             for (let i = 0; i < 15; i++) {
                 particles.push({
-                    x: x,
-                    y: y,
-                    vx: (Math.random() - 0.5) * 8,
-                    vy: (Math.random() - 0.5) * 8,
-                    life: 1,
-                    color: color
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+                    life: 1, color: color
                 });
             }
-            // Haptic feedback for mobile
-            if (navigator.vibrate) navigator.vibrate(20);
+            try { if ('vibrate' in navigator) navigator.vibrate(20); } catch (err) {}
         }
 
         function getNearestEnemy() {
@@ -170,74 +308,93 @@
             let minDist = Infinity;
             enemies.forEach(enemy => {
                 const dist = Math.hypot(enemy.x - player.x, enemy.y - player.y);
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearest = enemy;
-                }
+                if (dist < minDist) { minDist = dist; nearest = enemy; }
             });
             return nearest;
         }
 
         function update() {
-            if (isGameOver) return;
+            if (isGameOver || isPaused) return;
 
-            // Player Movement - Joystick
+            // Player Movement
             if (joystick.active) {
                 const dx = joystick.currentX - joystick.originX;
                 const dy = joystick.currentY - joystick.originY;
                 const distance = Math.hypot(dx, dy);
                 const normalizedDist = Math.min(distance, joystick.maxDistance) / joystick.maxDistance;
-                
                 if (distance > 0) {
                     player.vx = (dx / distance) * player.speed * normalizedDist;
                     player.vy = (dy / distance) * player.speed * normalizedDist;
                 }
-            } 
-            // Player Movement - Keyboard
-            else {
-                player.vx = 0;
-                player.vy = 0;
+            } else {
+                player.vx = 0; player.vy = 0;
                 if (keys['w'] || keys['arrowup']) player.vy = -player.speed;
                 if (keys['s'] || keys['arrowdown']) player.vy = player.speed;
                 if (keys['a'] || keys['arrowleft']) player.vx = -player.speed;
                 if (keys['d'] || keys['arrowright']) player.vx = player.speed;
             }
 
-            // Apply movement and boundaries
             player.x += player.vx;
             player.y += player.vy;
             player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
             player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
 
-            // Auto-Shoot Logic
+            // Shooting Logic with Upgrades
             player.autoShootTimer++;
             if (player.autoShootTimer >= player.shootInterval) {
                 const target = getNearestEnemy();
                 if (target) {
-                    const angle = Math.atan2(target.y - player.y, target.x - player.x);
-                    projectiles.push({
-                        x: player.x,
-                        y: player.y,
-                        vx: Math.cos(angle) * 10,
-                        vy: Math.sin(angle) * 10,
-                        radius: 4,
-                        color: '#ff0'
-                    });
+                    const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
+                    
+                    // Spread math
+                    const spreadAngle = 0.2; // roughly 11 degrees
+                    const startAngle = baseAngle - (spreadAngle * (player.multiShot - 1)) / 2;
+
+                    for(let s = 0; s < player.multiShot; s++) {
+                        const currentAngle = startAngle + (spreadAngle * s);
+                        projectiles.push({
+                            x: player.x, y: player.y,
+                            vx: Math.cos(currentAngle) * 12,
+                            vy: Math.sin(currentAngle) * 12,
+                            radius: 4,
+                            color: '#ff0',
+                            pierceRemaining: player.pierce,
+                            hitEnemies: [] // Keep track so we don't hit same enemy twice in one frame
+                        });
+                    }
                     player.autoShootTimer = 0;
                 }
             }
 
-            // Update Projectiles
+            // Projectiles Update
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 const p = projectiles[i];
-                p.x += p.vx;
-                p.y += p.vy;
+                p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
                     projectiles.splice(i, 1);
                 }
             }
 
-            // Update Enemies
+            // Gems Update (Magnet effect)
+            for (let i = gems.length - 1; i >= 0; i--) {
+                const g = gems[i];
+                const dist = Math.hypot(player.x - g.x, player.y - g.y);
+                if (dist < player.magnetRadius) {
+                    const angle = Math.atan2(player.y - g.y, player.x - g.x);
+                    g.x += Math.cos(angle) * 8; // Magnet pull speed
+                    g.y += Math.sin(angle) * 8;
+                }
+
+                if (dist < player.radius + g.radius) {
+                    // Collected!
+                    player.xp += 1;
+                    updateXpBar();
+                    gems.splice(i, 1);
+                    if (player.xp >= player.maxXp) triggerLevelUp();
+                }
+            }
+
+            // Enemies Update
             if (Math.random() < 0.02 + (wave * 0.005)) spawnEnemy();
 
             for (let i = enemies.length - 1; i >= 0; i--) {
@@ -246,33 +403,43 @@
                 e.x += Math.cos(angle) * e.speed;
                 e.y += Math.sin(angle) * e.speed;
 
-                // Check collision with player
+                // Player damage
                 const distToPlayer = Math.hypot(player.x - e.x, player.y - e.y);
                 if (distToPlayer - player.radius - e.radius < 1) {
                     isGameOver = true;
-                    if (navigator.vibrate) navigator.vibrate(200);
+                    try { if ('vibrate' in navigator) navigator.vibrate(200); } catch (err) {}
                 }
 
-                // Check collision with projectiles
+                // Projectile damage
                 for (let j = projectiles.length - 1; j >= 0; j--) {
                     const p = projectiles[j];
+                    
+                    if(p.hitEnemies.includes(e)) continue; // Already hit this frame/pierce
+
                     const distToProj = Math.hypot(p.x - e.x, p.y - e.y);
                     if (distToProj - e.radius - p.radius < 1) {
                         e.hp--;
-                        projectiles.splice(j, 1);
+                        p.hitEnemies.push(e);
+                        p.pierceRemaining--;
+                        
                         createExplosion(p.x, p.y, '#fff');
+
+                        if (p.pierceRemaining <= 0) {
+                            projectiles.splice(j, 1);
+                        }
 
                         if (e.hp <= 0) {
                             createExplosion(e.x, e.y, e.color);
+                            // Drop gem
+                            gems.push({x: e.x, y: e.y, radius: 4, color: '#0f0'});
+                            
                             enemies.splice(i, 1);
                             score += 10;
                             document.getElementById('scoreDisplay').innerText = score;
                             
-                            // Wave progression
                             if (score % 200 === 0) {
                                 wave++;
                                 document.getElementById('waveDisplay').innerText = wave;
-                                player.shootInterval = Math.max(5, player.shootInterval - 1);
                             }
                         }
                         break;
@@ -280,106 +447,99 @@
                 }
             }
 
-            // Update Particles
+            // Particles Update
             for (let i = particles.length - 1; i >= 0; i--) {
                 const p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
+                p.x += p.vx; p.y += p.vy;
                 p.life -= 0.05;
                 if (p.life <= 0) particles.splice(i, 1);
             }
         }
 
         // --- DRAW LOGIC ---
-
         function draw() {
-            // Cyberpunk grid background with motion blur effect
             ctx.fillStyle = 'rgba(5, 5, 16, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Grid
+            // Grid
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
             ctx.lineWidth = 1;
             const gridSize = 50;
             const offsetX = (player.x * 0.1) % gridSize;
             const offsetY = (player.y * 0.1) % gridSize;
 
-            for (let x = -offsetX; x < canvas.width; x += gridSize) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-            }
-            for (let y = -offsetY; y < canvas.height; y += gridSize) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-            }
+            for (let x = -offsetX; x < canvas.width; x += gridSize) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+            for (let y = -offsetY; y < canvas.height; y += gridSize) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+
+            // Draw Gems
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#0f0';
+            ctx.fillStyle = '#0f0';
+            gems.forEach(g => {
+                ctx.beginPath();
+                ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
 
             if (!isGameOver) {
-                // Draw Player (Neon Glow)
+                // Player Magnet Radius (Optional visual, nice for feedback)
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.05)';
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI * 2); ctx.stroke();
+
+                // Player
                 ctx.shadowBlur = 15;
                 ctx.shadowColor = player.color;
                 ctx.fillStyle = player.color;
                 ctx.beginPath();
                 ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.shadowBlur = 0; // Reset
+                ctx.shadowBlur = 0;
             }
 
-            // Draw Projectiles
+            // Projectiles
             ctx.shadowBlur = 10;
             ctx.shadowColor = '#ff0';
             ctx.fillStyle = '#ff0';
             projectiles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
             });
 
-            // Draw Enemies
+            // Enemies
             ctx.shadowColor = '#f0f';
             ctx.fillStyle = '#f0f';
             enemies.forEach(e => {
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2); ctx.fill();
             });
             ctx.shadowBlur = 0;
 
-            // Draw Particles
+            // Particles
             particles.forEach(p => {
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
             });
             ctx.globalAlpha = 1.0;
 
-            // Draw Virtual Joystick (Mobile)
-            if (joystick.active) {
+            // Virtual Joystick
+            if (joystick.active && !isPaused) {
                 ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
                 ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(joystick.originX, joystick.originY, joystick.maxDistance, 0, Math.PI * 2);
-                ctx.stroke();
-
+                ctx.beginPath(); ctx.arc(joystick.originX, joystick.originY, joystick.maxDistance, 0, Math.PI * 2); ctx.stroke();
                 ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
-                ctx.beginPath();
-                ctx.arc(joystick.currentX, joystick.currentY, 15, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(joystick.currentX, joystick.currentY, 15, 0, Math.PI * 2); ctx.fill();
             }
 
-            // Draw Game Over Screen
+            // Game Over
             if (isGameOver) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                ctx.fillStyle = '#f00';
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = '#f00';
-                ctx.font = 'bold 40px Courier New';
-                ctx.textAlign = 'center';
+                ctx.fillStyle = '#f00'; ctx.shadowBlur = 20; ctx.shadowColor = '#f00';
+                ctx.font = 'bold 40px Courier New'; ctx.textAlign = 'center';
                 ctx.fillText('SYSTEM FAILURE', canvas.width / 2, canvas.height / 2 - 20);
                 
-                ctx.fillStyle = '#0ff';
-                ctx.shadowColor = '#0ff';
+                ctx.fillStyle = '#0ff'; ctx.shadowColor = '#0ff';
                 ctx.font = '20px Courier New';
                 ctx.fillText('Tap or press ENTER to reboot', canvas.width / 2, canvas.height / 2 + 30);
                 ctx.shadowBlur = 0;
@@ -387,27 +547,32 @@
         }
 
         function resetGame() {
-            score = 0;
-            wave = 1;
-            player.x = canvas.width / 2;
-            player.y = canvas.height / 2;
-            player.shootInterval = 15;
-            enemies.length = 0;
-            projectiles.length = 0;
-            particles.length = 0;
+            score = 0; wave = 1;
+            player.x = canvas.width / 2; player.y = canvas.height / 2;
+            
+            // Reset Stats
+            player.level = 1; player.xp = 0; player.maxXp = 10;
+            player.shootInterval = 25; player.multiShot = 1; 
+            player.pierce = 1; player.speed = 4; player.magnetRadius = 80;
+
+            enemies.length = 0; projectiles.length = 0; 
+            particles.length = 0; gems.length = 0;
+            
             document.getElementById('scoreDisplay').innerText = score;
             document.getElementById('waveDisplay').innerText = wave;
+            document.getElementById('levelDisplay').innerText = player.level;
+            updateXpBar();
+            
             isGameOver = false;
         }
 
-        // Main Game Loop
+        // Loop
         function loop() {
             update();
             draw();
             requestAnimationFrame(loop);
         }
 
-        // Start game
         loop();
     </script>
 </body>
