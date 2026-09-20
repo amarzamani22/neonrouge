@@ -3,7 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Primary Meta Tags -->
     <title>Neon Rogue: Cyber Survivor</title>
+    <meta name="title" content="Neon Rogue: Cyber Survivor">
+    <meta name="description" content="A fast-paced cyberpunk arcade survival game. Play for free directly in your browser!">
+
+    <!-- Open Graph / Facebook / WhatsApp / Telegram -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://neonrouge.aztech.solutions/">
+    <meta property="og:title" content="Neon Rogue: Cyber Survivor">
+    <meta property="og:description" content="A fast-paced cyberpunk arcade survival game. Play for free directly in your browser!">
+    <meta property="og:image" content="https://neonrouge.aztech.solutions/IMG_1239.jpeg">
+
+    <!-- Twitter / X / Discord -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://neonrouge.aztech.solutions/">
+    <meta property="twitter:title" content="Neon Rogue: Cyber Survivor">
+    <meta property="twitter:description" content="A fast-paced cyberpunk arcade survival game. Play for free directly in your browser!">
+    <meta property="twitter:image" content="https://neonrouge.aztech.solutions/IMG_1239.jpeg">
     
     <!-- Retro Pixel Font -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -39,7 +57,6 @@
         /* NEON RETRO START SCREEN MODAL */
         #start-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            /* Deep cyber-blue gradient to match the game background */
             background: linear-gradient(to bottom, #050510 0%, #09132e 45%, #001a33 100%);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100; pointer-events: auto; text-align: center;
@@ -54,7 +71,7 @@
         }
 
         .pixel-subtitle {
-            color: #f0f; /* Hot Magenta */
+            color: #f0f; 
             font-size: 14px;
             text-shadow: 2px 2px 0px #300;
             margin-bottom: 12px;
@@ -64,7 +81,6 @@
         .pixel-title {
             color: #ffffff; 
             font-size: 36px;
-            /* Tri-color offset shadow for a glitchy neon look */
             text-shadow: 
                 4px 4px 0 #0ff,
                 -4px -4px 0 #f0f,
@@ -73,7 +89,6 @@
             line-height: 1.3;
         }
 
-        /* Blocky Button Layout */
         .menu-buttons {
             display: flex;
             flex-direction: column;
@@ -89,13 +104,12 @@
 
         .retro-btn {
             font-family: 'Press Start 2P', cursive;
-            background-color: #0b1a2a; /* Dark blue grid color */
-            color: #0ff; /* Cyan text */
+            background-color: #0b1a2a; 
+            color: #0ff; 
             border: 4px solid #030814;
             padding: 12px 16px;
             font-size: 10px;
             cursor: pointer;
-            /* 3D Inner Bevel */
             box-shadow: inset -4px -4px 0px rgba(0,0,0,0.6), inset 4px 4px 0px rgba(0, 255, 255, 0.2);
             text-transform: uppercase;
             transition: transform 0.1s, color 0.2s, background-color 0.2s;
@@ -112,8 +126,8 @@
         }
 
         .play-btn {
-            background-color: #0ff; /* Solid Neon Cyan */
-            color: #050510; /* Dark text */
+            background-color: #0ff; 
+            color: #050510; 
             font-size: 16px;
             padding: 16px 30px;
             border: 4px solid #005555;
@@ -129,7 +143,6 @@
             box-shadow: inset 4px 4px 0px rgba(0,0,0,0.4);
         }
 
-        /* Level Up Modal */
         #upgrade-modal {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(5, 5, 16, 0.90); flex-direction: column; justify-content: center; 
@@ -394,7 +407,6 @@
             }
         }
 
-        // --- DRAW LOGIC ---
         function draw() {
             ctx.fillStyle = 'rgba(5, 5, 16, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)'; ctx.lineWidth = 1;
